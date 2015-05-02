@@ -9,7 +9,6 @@ namespace JeroenDesloovere\VCard;
  * file that was distributed with this source code.
  */
 
-use JeroenDesloovere\VCard\Exception as VCardException;
 use Behat\Transliterator\Transliterator;
 
 /**
@@ -361,6 +360,27 @@ class VCard
     }
 
     /**
+     * chunk_split (unicode), mbstring.func_overload must be >= 2
+     *
+     * @param string $body
+     * @param int $chunkLength
+     * @param string $end
+     * @return string
+     */
+    protected function _chunkSplitUnicode($body, $chunkLength, $end)
+    {
+        $chunks = [];
+        while(strlen($body) > $chunkLength) {
+            $chunks[] = substr($body, 0, $chunkLength);
+            $body = substr($body, $chunkLength);
+        }
+        if (strlen($body)) {
+            $chunks[] = $body;
+        }
+        return implode($chunks, $end);
+    }
+
+    /**
      * Fold a line according to RFC2425 section 5.8.1.
      *
      * @link http://tools.ietf.org/html/rfc2425#section-5.8.1
@@ -373,8 +393,7 @@ class VCard
             return $text;
         }
 
-        // split, wrap and trim trailing separator
-        return substr(chunk_split($text, 73, "\r\n "), 0, -3);
+        return $this->_chunkSplitUnicode($text, 73, "\r\n ");
     }
 
     /**

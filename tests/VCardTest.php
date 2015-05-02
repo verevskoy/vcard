@@ -105,4 +105,31 @@ class VCardTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals('mister-jeroen-desloovere-junior', $this->vcard->getFilename());
     }
+
+    /**
+     * @dataProvider _testFoldDataProvider
+     * @param string $foldText
+     * @param string $expected
+     */
+    public function testFold($foldText, $expected)
+    {
+        //mbstring.func_overload must be >= 2
+        $vCard = new VCard();
+        $reflection = new \ReflectionClass(get_class($vCard));
+        $method = $reflection->getMethod('fold');
+        $method->setAccessible(true);
+        $this->assertEquals($expected, $method->invokeArgs($vCard, [$foldText]));
+    }
+
+    public function _testFoldDataProvider()
+    {
+        return [
+            ['short string', 'short string'],
+            [
+                //russian language
+                "NOTE:Ветер, ветер! Ты могуч, Ты гоняешь стаи туч, Ты волнуешь сине море, Всюду веешь на просторе. Не боишься никого, Кроме бога одного.",
+                "NOTE:Ветер, ветер! Ты могуч, Ты гоняешь стаи туч, Ты волнуешь сине море, \r\n Всюду веешь на просторе. Не боишься никого, Кроме бога одного.",
+            ]
+        ];
+    }
 }
