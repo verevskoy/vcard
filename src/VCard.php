@@ -10,6 +10,8 @@ namespace JeroenDesloovere\VCard;
  */
 
 use Behat\Transliterator\Transliterator;
+use JeroenDesloovere\VCard\LineWrapper\SimpleLineWrapper;
+use JeroenDesloovere\VCard\LineWrapper\LineWrapperInterface;
 
 /**
  * VCard PHP Class to generate .vcard files and save them to a file or output as a download.
@@ -57,6 +59,35 @@ class VCard
      * @var string
      */
     public $charset = 'utf-8';
+
+    /**
+     * @var LineWrapperInterface
+     */
+    private $lineWrapper;
+
+    /**
+     * @return LineWrapperInterface
+     */
+    public function getLineWrapper()
+    {
+        if (!$this->lineWrapper) {
+            $this->lineWrapper = new SimpleLineWrapper();
+        }
+
+        return $this->lineWrapper;
+    }
+
+    /**
+     * @param LineWrapperInterface $lineWrapper
+     *
+     * @return VCard
+     */
+    public function setLineWrapper(LineWrapperInterface $lineWrapper)
+    {
+        $this->lineWrapper = $lineWrapper;
+
+        return $this;
+    }
 
     /**
      * Add address
@@ -354,7 +385,7 @@ class VCard
         $properties = $this->getProperties();
         foreach ($properties as $property) {
             // add to string
-            $string .= $this->fold($property['key'] . ':' . $property['value'] . "\r\n");
+            $string .= $this->getLineWrapper()->prepareLine($property['key'] . ':' . $property['value']) . "\r\n";
         }
 
         // add to string
@@ -447,23 +478,6 @@ class VCard
 
         // echo the output and it will be a download
         echo $output;
-    }
-
-    /**
-     * Fold a line according to RFC2425 section 5.8.1.
-     *
-     * @link http://tools.ietf.org/html/rfc2425#section-5.8.1
-     * @param  string $text
-     * @return mixed
-     */
-    protected function fold($text)
-    {
-        if (strlen($text) <= 75) {
-            return $text;
-        }
-
-        // split, wrap and trim trailing separator
-        return substr(chunk_split($text, 73, "\r\n "), 0, -3);
     }
 
     /**
